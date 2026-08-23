@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VoltPulse — Drive on Certainty</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --carbon-0:#0A0C10;
+  --carbon-1:#12161C;
+  --carbon-2:#171D26;
+  --carbon-3:#0D1116;
+  --hairline:rgba(41,211,255,0.15);
+  --hairline-soft:rgba(199,208,217,0.10);
+  --volt:#29D3FF;
+  --volt-dim:#1E9EC2;
+  --charge:#B6FF3C;
+  --charge-dim:#84C22A;
+  --chrome:#C7D0D9;
+  --alert:#FF5B4D;
+  --text-hi:#F2F6F9;
+  --text-mid:#93A6B8;
+  --text-low:#4E5F70;
+  --disp:'Rajdhani',sans-serif;
+  --body:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(1200px 650px at 88% -8%, rgba(41,211,255,0.13), transparent 60%),
+    radial-gradient(900px 550px at 4% 6%, rgba(182,255,60,0.05), transparent 55%),
+    var(--carbon-0);
+  color:var(--text-hi);
+  font-family:var(--body);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+::selection{background:var(--volt);color:#031218;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;}
+.wrap{max-width:1240px;margin:0 auto;padding:0 32px;}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--carbon-0);}
+::-webkit-scrollbar-thumb{background:var(--carbon-2);border-radius:10px;}
+
+/* ---- carbon-fiber weave + HUD grid backdrop ---- */
+.circuit-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 5px),
+    linear-gradient(var(--hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
+  background-size:6px 6px, 6px 6px, 64px 64px, 64px 64px;
+  mask-image:radial-gradient(1300px 850px at 50% 0%, black, transparent 78%);
+  opacity:0.65;
+}
+.blueprint-car{
+  position:absolute;right:-6%;top:-4%;width:62%;max-width:820px;opacity:0.08;pointer-events:none;z-index:0;
+}
+@media (max-width:980px){.blueprint-car{display:none;}}
+
+/* ---- status strip (dashboard cluster bar) ---- */
+.status-strip{
+  position:relative;z-index:50;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:9px 32px;background:var(--carbon-3);border-bottom:1px solid var(--hairline);
+  font-family:var(--mono);font-size:0.74rem;color:var(--text-mid);
+}
+.ss-item{display:flex;align-items:center;gap:6px;}
+.ss-item span{color:var(--text-hi);font-weight:600;}
+.ss-sep{color:var(--text-low);}
+.ss-item.bt-indicator{color:var(--alert);}
+.ss-item.bt-indicator.on{color:var(--charge);}
+
+/* ---------- NAV ---------- */
+nav{
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(16px);
+  background:rgba(10,12,16,0.78);
+  border-bottom:1px solid var(--hairline);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;max-width:1240px;margin:0 auto;}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:1.35rem;letter-spacing:0.01em;}
+.logo-ring{width:34px;height:34px;flex-shrink:0;}
+.nav-links{display:flex;gap:34px;font-size:0.9rem;color:var(--text-mid);font-weight:500;font-family:var(--disp);letter-spacing:0.02em;}
+.nav-links a{transition:color .15s ease;}
+.nav-links a:hover{color:var(--volt);}
+.nav-cta{
+  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--volt),#7BEAFF);color:#02141C;font-weight:700;font-size:0.85rem;
+  padding:11px 20px;border-radius:100px;letter-spacing:0.01em;font-family:var(--disp);
+  box-shadow:0 0 0 1px rgba(41,211,255,0.3),0 8px 24px rgba(41,211,255,0.25);
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(41,211,255,0.5),0 12px 30px rgba(41,211,255,0.4);}
+@media (max-width:900px){.nav-links{display:none;}}
+
+/* ---------- HERO ---------- */
+header.hero{position:relative;z-index:1;padding:70px 32px 0;overflow:hidden;}
+.hero-grid{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center;position:relative;z-index:2;}
+@media (max-width:980px){.hero-grid{grid-template-columns:1fr;}}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--volt);border:1px solid rgba(41,211,255,0.35);
+  padding:6px 12px;border-radius:100px;background:rgba(41,211,255,0.06);
+  margin-bottom:22px;
+}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--volt);box-shadow:0 0 10px var(--volt);animation:blink 1.6s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}
+h1.hero-title{
+  font-family:var(--disp);font-weight:700;font-size:clamp(2.8rem,5.4vw,4.6rem);
+  line-height:0.98;letter-spacing:-0.01em;margin-bottom:22px;text-transform:uppercase;
+}
+h1.hero-title .accent{
+  background:linear-gradient(100deg,var(--volt),var(--charge));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero-sub{font-size:1.06rem;color:var(--text-mid);max-width:480px;line-height:1.65;margin-bottom:34px;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:38px;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--volt),#7BEAFF);color:#02141C;font-weight:700;font-size:0.92rem;
+  padding:15px 26px;border-radius:100px;display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);letter-spacing:0.01em;
+  box-shadow:0 10px 30px rgba(41,211,255,0.28);transition:.15s ease;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(41,211,255,0.4);}
+.btn-ghost{
+  border:1px solid var(--hairline-soft);color:var(--text-hi);font-weight:600;font-size:0.92rem;font-family:var(--disp);
+  padding:15px 26px;border-radius:100px;background:rgba(255,255,255,0.02);transition:.15s ease;
+}
+.btn-ghost:hover{border-color:var(--charge);color:var(--charge);}
+.hero-stats{display:flex;gap:36px;flex-wrap:wrap;}
+.hstat b{display:block;font-family:var(--mono);font-size:1.5rem;color:var(--volt);}
+.hstat span{font-size:0.78rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.06em;}
+
+.hero-visual{
+  position:relative;background:linear-gradient(180deg,var(--carbon-1),var(--carbon-3));
+  border:1px solid var(--hairline);border-radius:24px;padding:22px;
+  box-shadow:0 30px 70px rgba(0,0,0,0.5);
+}
+.hv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.hv-title{font-family:var(--mono);font-size:0.78rem;color:var(--text-mid);}
+.hv-live{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:0.72rem;color:var(--volt);}
+
+/* ---- HUD corner-bracket frame + leaflet ---- */
+.leaflet-box{position:relative;height:290px;border-radius:16px;overflow:hidden;border:1px solid var(--hairline);}
+.hud-frame{position:relative;}
+.hud-frame::before,.hud-frame::after,
+.hud-frame .hc-tl,.hud-frame .hc-tr,.hud-frame .hc-bl,.hud-frame .hc-br{content:'';position:absolute;width:20px;height:20px;border-color:var(--volt);z-index:600;pointer-events:none;}
+.hud-frame::before{top:8px;left:8px;border-top:2px solid var(--volt);border-left:2px solid var(--volt);}
+.hud-frame::after{top:8px;right:8px;border-top:2px solid var(--volt);border-right:2px solid var(--volt);}
+.hud-frame .hc-bl{bottom:8px;left:8px;border-bottom:2px solid var(--volt);border-left:2px solid var(--volt);}
+.hud-frame .hc-br{bottom:8px;right:8px;border-bottom:2px solid var(--volt);border-right:2px solid var(--volt);}
+.map-status{
+  position:absolute;left:10px;bottom:10px;z-index:500;font-family:var(--mono);font-size:0.68rem;
+  background:rgba(10,12,16,0.9);border:1px solid var(--hairline);color:var(--volt);
+  padding:5px 10px;border-radius:8px;max-width:80%;
+}
+.leaflet-box .leaflet-tile-pane{filter:invert(1) hue-rotate(190deg) brightness(0.9) contrast(0.95) saturate(0.7);}
+.leaflet-box .leaflet-control-zoom a{background:var(--carbon-1);color:var(--text-hi);border-color:var(--hairline)!important;}
+.leaflet-box .leaflet-control-zoom a:hover{background:var(--carbon-2);}
+.leaflet-box .leaflet-control-attribution{background:rgba(10,12,16,0.82)!important;color:var(--text-low)!important;font-size:9px!important;}
+.leaflet-box .leaflet-control-attribution a{color:var(--text-mid)!important;}
+.ors-route-line{stroke-dasharray:8 10;animation:flow 1.4s linear infinite;}
+@keyframes flow{to{stroke-dashoffset:-36;}}
+.mk-dot{width:14px;height:14px;border-radius:50%;border:2px solid #0A0C10;}
+.mk-label{font-family:var(--mono);font-size:10px;background:rgba(10,12,16,0.92);border:1px solid var(--hairline);padding:2px 6px;border-radius:5px;color:#fff;white-space:nowrap;}
+
+.hv-chips{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.chip{
+  background:rgba(255,255,255,0.03);border:1px solid var(--hairline);border-radius:12px;
+  padding:10px 14px;font-family:var(--mono);font-size:0.72rem;color:var(--text-mid);flex:1;min-width:110px;
+}
+.chip b{display:block;color:var(--text-hi);font-size:0.95rem;margin-top:2px;}
+
+/* ---- animated road divider (signature element) ---- */
+.road-divider{position:relative;z-index:1;height:64px;overflow:hidden;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%),
+    repeating-linear-gradient(100deg, #14181f 0 2px, #171c24 2px 4px),
+    #15191F;
+  border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);
+}
+.road-lane{
+  position:absolute;top:50%;left:0;width:200%;height:6px;transform:translateY(-50%);
+  background-image:repeating-linear-gradient(90deg, var(--chrome) 0 34px, transparent 34px 64px);
+  opacity:0.55;animation:roadScroll 2.2s linear infinite;
+}
+@keyframes roadScroll{from{transform:translate(0,-50%);}to{transform:translate(-64px,-50%);}}
+.road-car{position:absolute;top:50%;left:6%;transform:translateY(-58%);font-size:1.6rem;filter:drop-shadow(0 0 10px rgba(41,211,255,0.6));animation:roadCar 4.5s ease-in-out infinite;}
+@keyframes roadCar{0%,100%{left:4%;}50%{left:92%;transform:translateY(-58%) scaleX(-1);}}
+
+section{position:relative;z-index:1;padding:88px 32px;}
+.section-head{max-width:640px;margin-bottom:52px;}
+.section-eyebrow{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.75rem;color:var(--charge-dim);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:12px;}
+.section-eyebrow svg{flex-shrink:0;}
+.section-title{font-family:var(--disp);font-weight:700;font-size:clamp(2rem,3.2vw,2.8rem);letter-spacing:-0.005em;margin-bottom:14px;text-transform:uppercase;}
+.section-desc{color:var(--text-mid);font-size:1rem;line-height:1.6;}
+
+/* ---------- CAR PICKER ---------- */
+.car-grid{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:32px;}
+@media (max-width:980px){.car-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:640px){.car-grid{grid-template-columns:1fr;}}
+.car-card{
+  background:linear-gradient(180deg,var(--carbon-1),var(--carbon-3));
+  border:1px solid var(--hairline);border-radius:20px;padding:22px;cursor:pointer;
+  transition:.2s ease;position:relative;overflow:hidden;
+}
+.car-card:hover{transform:translateY(-4px);border-color:rgba(41,211,255,0.4);}
+.car-card.selected{border-color:var(--volt);box-shadow:0 0 0 1px var(--volt),0 20px 50px rgba(41,211,255,0.14);}
+.car-card.selected::before{
+  content:"✓ SELECTED";position:absolute;top:14px;right:14px;font-family:var(--mono);font-size:0.62rem;
+  background:var(--volt);color:#031218;padding:4px 8px;border-radius:6px;font-weight:700;letter-spacing:0.05em;
+}
+.car-svg-holder{
+  height:114px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;position:relative;
+  background:radial-gradient(ellipse 70% 60% at 50% 78%, rgba(41,211,255,0.14), transparent 72%);
+}
+.car-svg-holder::after{
+  content:'';position:absolute;left:12%;right:12%;bottom:14px;height:8px;border-radius:50%;
+  background:radial-gradient(ellipse, rgba(0,0,0,0.55), transparent 75%);
+}
+.car-name{font-family:var(--disp);font-weight:700;font-size:1.25rem;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.01em;}
+.car-badge{display:inline-block;font-family:var(--mono);font-size:0.68rem;color:var(--volt);background:rgba(41,211,255,0.08);border:1px solid rgba(41,211,255,0.28);padding:2px 8px;border-radius:100px;margin-bottom:14px;}
+.car-specs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.spec{border-top:1px solid var(--hairline);padding-top:8px;}
+.spec span{display:block;font-size:0.66rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.05em;}
+.spec b{font-family:var(--mono);font-size:0.95rem;color:var(--text-hi);}
+.car-select-btn{
+  width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--hairline);color:var(--text-hi);font-weight:600;font-size:0.85rem;transition:.15s ease;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;
+}
+.car-card.selected .car-select-btn{background:var(--volt);color:#031218;border-color:var(--volt);}
+
+/* ---- vehicle manual-entry setup panel ---- */
+.vsetup{
+  max-width:1240px;margin:0 auto;background:linear-gradient(120deg,var(--carbon-1),var(--carbon-2));
+  border:1px solid var(--hairline);border-radius:24px;padding:32px 36px;
+}
+.vsetup-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:14px;}
+.vsetup-label{font-family:var(--mono);font-size:0.7rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.vsetup-head h3{font-family:var(--disp);font-size:1.5rem;text-transform:uppercase;}
+.vsetup-battery-display{text-align:right;}
+.vsetup-battery-display b{display:block;font-family:var(--mono);font-size:2rem;color:var(--charge);}
+.vsetup-battery-display span{font-size:0.72rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.05em;}
+.vs-slider-label{display:block;font-family:var(--mono);font-size:0.72rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+input.battery-slider{
+  -webkit-appearance:none;width:100%;height:6px;border-radius:6px;
+  background:linear-gradient(90deg,var(--alert),var(--charge));outline:none;margin-bottom:10px;
+}
+input.battery-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:#fff;border:4px solid var(--volt);box-shadow:0 0 14px rgba(41,211,255,0.7);cursor:pointer;
+}
+input.battery-slider::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--volt);cursor:pointer;
+}
+.battery-track-visual{width:100%;height:10px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden;margin-bottom:26px;border:1px solid var(--hairline);}
+.battery-track-fill{height:100%;background:linear-gradient(90deg,var(--alert),var(--charge));transition:width .15s ease;}
+.advanced-toggle{
+  display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--hairline);
+  color:var(--text-hi);font-weight:600;font-size:0.85rem;padding:12px 18px;border-radius:12px;width:100%;justify-content:space-between;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;
+}
+.advanced-toggle span{transition:transform .2s ease;}
+.advanced-toggle.open span{transform:rotate(180deg);}
+.advanced-panel{margin-top:18px;padding-top:18px;border-top:1px solid var(--hairline);}
+.mode-row{display:flex;gap:10px;flex-wrap:wrap;}
+.mode-btn{
+  flex:1;min-width:120px;padding:13px;border-radius:12px;background:rgba(255,255,255,0.03);
+  border:1px solid var(--hairline);color:var(--text-mid);font-weight:600;font-size:0.85rem;transition:.15s ease;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;
+}
+.mode-btn.selected[data-mode="Eco"]{background:rgba(182,255,60,0.1);border-color:var(--charge);color:var(--charge);}
+.mode-btn.selected[data-mode="Normal"]{background:rgba(41,211,255,0.1);border-color:var(--volt);color:var(--volt);}
+.mode-btn.selected[data-mode="Sport"]{background:rgba(255,91,77,0.1);border-color:var(--alert);color:var(--alert);}
+.mode-btn.selected[data-mode="Offroad"]{background:rgba(199,208,217,0.1);border-color:var(--chrome);color:var(--chrome);}
+
+.bt-wrap{max-width:1240px;margin:0 auto;background:linear-gradient(120deg,var(--carbon-1),var(--carbon-2));border:1px solid var(--hairline);border-radius:28px;padding:44px;display:grid;grid-template-columns:280px 1fr;gap:44px;align-items:center;}
+@media (max-width:900px){.bt-wrap{grid-template-columns:1fr;}}
+.bt-visual{display:flex;flex-direction:column;align-items:center;gap:18px;}
+.bt-rings{position:relative;width:170px;height:170px;display:grid;place-items:center;}
+.bt-ring{position:absolute;border-radius:50%;border:1px solid rgba(41,211,255,0.35);animation:ringPulse 2.4s ease-out infinite;}
+.bt-ring:nth-child(1){width:60px;height:60px;}
+.bt-ring:nth-child(2){width:110px;height:110px;animation-delay:.5s;}
+.bt-ring:nth-child(3){width:160px;height:160px;animation-delay:1s;}
+@keyframes ringPulse{0%{opacity:0.9;transform:scale(0.8);}100%{opacity:0;transform:scale(1.15);}}
+.bt-core{position:relative;z-index:2;width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,var(--volt),var(--charge));display:grid;place-items:center;box-shadow:0 0 40px rgba(41,211,255,0.4);}
+.bt-status{font-family:var(--mono);font-size:0.8rem;color:var(--volt);text-align:center;}
+.bt-status small{display:block;color:var(--text-low);margin-top:4px;font-size:0.72rem;}
+.bt-connect-btn{margin-top:6px;background:var(--volt);color:#031218;font-weight:700;padding:10px 22px;border-radius:100px;font-size:0.84rem;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;}
+.bt-details h3{font-family:var(--disp);font-size:1.6rem;margin-bottom:8px;text-transform:uppercase;}
+.bt-details p{color:var(--text-mid);margin-bottom:24px;max-width:480px;line-height:1.6;}
+.bt-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.bt-metric{background:rgba(0,0,0,0.2);border:1px solid var(--hairline);border-radius:14px;padding:16px;}
+.bt-metric span{display:block;font-size:0.68rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;}
+.bt-metric b{font-family:var(--mono);font-size:1.2rem;color:var(--charge);}
+.signal-bars{display:flex;align-items:flex-end;gap:3px;height:16px;margin-top:6px;}
+.signal-bars i{width:4px;background:var(--volt);border-radius:2px;display:block;}
+.signal-bars i:nth-child(1){height:30%;} .signal-bars i:nth-child(2){height:55%;} .signal-bars i:nth-child(3){height:75%;} .signal-bars i:nth-child(4){height:100%;}
+
+.planner{max-width:1240px;margin:0 auto;background:var(--carbon-1);border:1px solid var(--hairline);border-radius:28px;padding:40px;}
+.planner-form{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;align-items:end;margin-bottom:18px;}
+@media (max-width:800px){.planner-form{grid-template-columns:1fr;}}
+.field label{display:block;font-family:var(--mono);font-size:0.7rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.field-input{
+  display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.25);border:1px solid var(--hairline);
+  border-radius:14px;padding:14px 16px;font-size:0.95rem;
+}
+.field-input input{background:none;border:none;outline:none;color:var(--text-hi);width:100%;font-family:var(--body);font-size:0.95rem;}
+.plan-btn{background:linear-gradient(135deg,var(--volt),#7BEAFF);color:#02141C;font-weight:700;padding:15px 30px;border-radius:14px;font-size:0.92rem;white-space:nowrap;box-shadow:0 10px 26px rgba(41,211,255,0.25);transition:.15s ease;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;}
+.plan-btn:disabled{opacity:0.6;cursor:wait;}
+.planner-status{font-family:var(--mono);font-size:0.76rem;color:var(--text-low);margin-bottom:20px;min-height:16px;}
+.planner-status.err{color:var(--alert);}
+.planner-status.ok{color:var(--volt);}
+
+.trip-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px;}
+@media (max-width:800px){.trip-stats{grid-template-columns:repeat(2,1fr);}}
+.trip-stat{background:var(--carbon-2);border:1px solid var(--hairline);border-radius:16px;padding:20px;}
+.trip-stat span{display:block;font-size:0.7rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.trip-stat b{font-family:var(--mono);font-size:1.7rem;color:var(--text-hi);}
+.trip-stat b.volt{color:var(--volt);}
+.trip-stat b.charge{color:var(--charge);}
+.trip-stat small{display:block;color:var(--text-low);font-size:0.72rem;margin-top:4px;}
+.battery-bar{width:100%;height:8px;border-radius:6px;background:rgba(255,255,255,0.08);margin-top:10px;overflow:hidden;}
+.battery-fill{height:100%;background:linear-gradient(90deg,var(--alert),var(--charge));border-radius:6px;width:64%;transition:width .3s ease;}
+
+.station-summary{max-width:1240px;margin:0 auto 22px;display:flex;gap:14px;flex-wrap:wrap;}
+.summary-chip{display:flex;align-items:center;gap:10px;background:var(--carbon-1);border:1px solid var(--hairline);border-radius:14px;padding:12px 18px;font-family:var(--mono);font-size:0.8rem;color:var(--text-mid);}
+.summary-chip b{font-size:1.1rem;font-family:var(--mono);}
+.summary-chip.fast b{color:var(--volt);}
+.summary-chip.govt b{color:var(--chrome);}
+.station-filter-tabs{max-width:1240px;margin:0 auto 26px;display:flex;gap:10px;flex-wrap:wrap;}
+.filter-tab{
+  padding:10px 20px;border-radius:100px;background:rgba(255,255,255,0.03);border:1px solid var(--hairline);
+  color:var(--text-mid);font-weight:600;font-size:0.84rem;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;transition:.15s ease;
+}
+.filter-tab:hover{border-color:var(--hairline-soft);color:var(--text-hi);}
+.filter-tab.active{background:var(--volt);color:#031218;border-color:var(--volt);}
+.filter-tab.active[data-filter="govt"]{background:var(--chrome);border-color:var(--chrome);}
+.type-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:0.64rem;padding:4px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;}
+.type-badge.fast{background:rgba(41,211,255,0.1);color:var(--volt);border:1px solid rgba(41,211,255,0.35);}
+.type-badge.govt{background:rgba(199,208,217,0.1);color:var(--chrome);border:1px solid rgba(199,208,217,0.35);}
+.station-grid{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+@media (max-width:900px){.station-grid{grid-template-columns:1fr;}}
+.station-card{
+  background:linear-gradient(180deg,var(--carbon-1),var(--carbon-3));
+  border:1px solid var(--hairline);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px;
+  transition:.2s ease;
+}
+.station-card:hover{border-color:rgba(41,211,255,0.4);transform:translateY(-3px);}
+.station-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.station-name{font-family:var(--disp);font-weight:700;font-size:1.15rem;margin-bottom:4px;text-transform:uppercase;}
+.station-net{font-size:0.78rem;color:var(--text-low);}
+.avail-badge{font-family:var(--mono);font-size:0.68rem;padding:5px 10px;border-radius:100px;white-space:nowrap;}
+.avail-badge.open{background:rgba(182,255,60,0.12);color:var(--charge);border:1px solid rgba(182,255,60,0.35);}
+.avail-badge.busy{background:rgba(255,91,77,0.12);color:var(--alert);border:1px solid rgba(255,91,77,0.35);}
+.plug-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.plug-tag{font-family:var(--mono);font-size:0.68rem;background:rgba(255,255,255,0.05);border:1px solid var(--hairline);padding:4px 9px;border-radius:8px;color:var(--text-mid);}
+.station-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.smeta span{display:block;font-size:0.66rem;color:var(--text-low);text-transform:uppercase;}
+.smeta b{font-family:var(--mono);font-size:1rem;color:var(--text-hi);}
+.slots-row{display:flex;align-items:center;gap:10px;}
+.slots-track{flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;}
+.slots-fill{height:100%;background:linear-gradient(90deg,var(--volt),var(--charge));}
+.slots-label{font-family:var(--mono);font-size:0.7rem;color:var(--text-mid);white-space:nowrap;}
+.station-actions{display:flex;gap:10px;margin-top:4px;}
+.dir-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--hairline);border-radius:12px;
+  padding:11px;font-weight:600;font-size:0.85rem;color:var(--text-hi);transition:.15s ease;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;
+}
+.dir-btn:hover{background:var(--volt);color:#031218;border-color:var(--volt);}
+.reserve-btn{
+  padding:11px 18px;background:rgba(182,255,60,0.1);border:1px solid rgba(182,255,60,0.35);
+  border-radius:12px;color:var(--charge);font-weight:600;font-size:0.85rem;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;
+}
+
+.impact-wrap{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+@media (max-width:900px){.impact-wrap{grid-template-columns:1fr;}}
+.gauge-card{background:var(--carbon-1);border:1px solid var(--hairline);border-radius:24px;padding:36px;display:flex;align-items:center;gap:30px;}
+.impact-stats{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.impact-stat{background:var(--carbon-1);border:1px solid var(--hairline);border-radius:20px;padding:26px;}
+.impact-stat .ico{width:38px;height:38px;border-radius:10px;background:rgba(182,255,60,0.1);display:grid;place-items:center;margin-bottom:14px;color:var(--charge);}
+.impact-stat b{display:block;font-family:var(--mono);font-size:2rem;color:var(--text-hi);}
+.impact-stat span{color:var(--text-low);font-size:0.82rem;}
+
+footer{border-top:1px solid var(--hairline);padding:48px 32px;position:relative;z-index:1;
+  background-image:repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 10px);}
+.footer-inner{max-width:1240px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;}
+.tech-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.tech-chip{font-family:var(--mono);font-size:0.68rem;color:var(--text-low);border:1px solid var(--hairline);padding:5px 10px;border-radius:100px;}
+.foot-copy{color:var(--text-low);font-size:0.82rem;font-family:var(--mono);}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease, transform .7s ease;}
+.reveal.in{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+
+<div class="circuit-bg"></div>
+
+<div class="status-strip" id="statusStrip">
+  <div class="ss-item">🚗 <span id="ssCar">Tata Nexon EV</span></div>
+  <div class="ss-sep">│</div>
+  <div class="ss-item">🔋 <span id="ssBattery">72%</span></div>
+  <div class="ss-sep">│</div>
+  <div class="ss-item">⚙ <span id="ssMode">Normal</span></div>
+  <div class="ss-sep">│</div>
+  <div class="ss-item bt-indicator" id="ssBt">● Not Paired</div>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <svg class="logo-ring" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="17" stroke="#29D3FF" stroke-width="2" opacity="0.5"/>
+        <g stroke="#29D3FF" stroke-width="1.4" opacity="0.7">
+          <line x1="20" y1="4" x2="20" y2="8"/><line x1="20" y1="32" x2="20" y2="36"/>
+          <line x1="4" y1="20" x2="8" y2="20"/><line x1="32" y1="20" x2="36" y2="20"/>
+        </g>
+        <path d="M22 8 L13 22 H19 L17 32 L27 17 H21 Z" fill="#B6FF3C"/>
+      </svg>
+      VoltPulse
+    </div>
+    <div class="nav-links">
+      <a href="#fleet">Fleet</a>
+      <a href="#connect">Connect</a>
+      <a href="#planner">Trip Planner</a>
+      <a href="#stations">Charging Map</a>
+      <a href="#impact">Impact</a>
+    </div>
+    <a class="nav-cta" href="#planner">Plan a Route →</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <svg class="blueprint-car" viewBox="0 0 500 220" fill="none">
+    <path d="M40 150 C40 120 60 100 95 96 L130 55 C140 42 158 34 178 34 L300 34 C322 34 342 42 356 58 L388 96 C440 100 460 122 460 148 L460 162 C460 172 452 178 442 178 L58 178 C48 178 40 172 40 162 Z"
+      stroke="#29D3FF" stroke-width="1.5"/>
+    <path d="M148 96 L168 50 L288 50 L318 96 Z" stroke="#29D3FF" stroke-width="1.2"/>
+    <circle cx="128" cy="178" r="32" stroke="#29D3FF" stroke-width="1.5"/>
+    <circle cx="372" cy="178" r="32" stroke="#29D3FF" stroke-width="1.5"/>
+    <line x1="40" y1="200" x2="460" y2="200" stroke="#29D3FF" stroke-width="1" stroke-dasharray="4 4"/>
+    <line x1="40" y1="190" x2="40" y2="210" stroke="#29D3FF" stroke-width="1"/>
+    <line x1="460" y1="190" x2="460" y2="210" stroke="#29D3FF" stroke-width="1"/>
+  </svg>
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> LIVE ROUTING ENGINE · SIH 2026</div>
+      <h1 class="hero-title">Drive electric.<br>Never <span class="accent">guess again.</span></h1>
+      <p class="hero-sub">VoltPulse fuses live traffic, real charger availability and your car's real battery physics into one route — so range anxiety stops being part of the trip.</p>
+      <div class="hero-actions">
+        <a href="#planner" class="btn-primary">🧭 Plan My Route</a>
+        <a href="#fleet" class="btn-ghost">🚗 Choose My Car</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><b>12,400+</b><span>Chargers mapped</span></div>
+        <div class="hstat"><b>96.4%</b><span>Route accuracy</span></div>
+        <div class="hstat"><b>-38%</b><span>Avg. wait time</span></div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hv-top">
+        <div class="hv-title">TRIP PLANNER · DELHI → SECTOR 135, NOIDA</div>
+        <div class="hv-live"><span style="width:6px;height:6px;border-radius:50%;background:var(--volt);box-shadow:0 0 8px var(--volt);display:inline-block;"></span>LIVE</div>
+      </div>
+      <div class="leaflet-box hud-frame" id="heroMap">
+        <span class="hc-bl"></span><span class="hc-br"></span>
+        <div class="map-status" id="heroMapStatus">Routing via OpenRouteService…</div>
+      </div>
+      <div class="hv-chips">
+        <div class="chip">DISTANCE<b id="heroDist">—</b></div>
+        <div class="chip">ETA<b id="heroEta">—</b></div>
+        <div class="chip">ARRIVE WITH<b id="heroArrive">—</b></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="road-divider"><div class="road-lane"></div><div class="road-car">🚙</div></div>
+
+<!-- ================= FLEET ================= -->
+<section id="fleet">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="#B6FF3C" stroke-width="1.2" fill="none"/><line x1="8" y1="8" x2="11" y2="5" stroke="#B6FF3C" stroke-width="1.2"/></svg>01 · Choose your ride</div>
+      <h2 class="section-title">Pick the EV you're actually driving</h2>
+      <p class="section-desc">Every route, charge stop and range estimate is tuned to your exact model's real battery curve — not a generic average.</p>
+    </div>
+
+    <div class="car-grid" id="carGrid"></div>
+
+    <div class="vsetup reveal" id="vehicleSetup">
+      <div class="vsetup-head">
+        <div>
+          <div class="vsetup-label">Manual entry for</div>
+          <h3 id="vsCarName">—</h3>
+        </div>
+        <div class="vsetup-battery-display"><b id="vsBatteryBig">72%</b><span>current battery</span></div>
+      </div>
+
+      <label class="vs-slider-label">Current battery level</label>
+      <input type="range" min="1" max="100" value="72" id="batterySlider" class="battery-slider">
+      <div class="battery-track-visual"><div class="battery-track-fill" id="batteryTrackFill" style="width:72%"></div></div>
+
+      <button class="advanced-toggle" id="advToggle">⚙ Advanced options <span id="advChevron">▾</span></button>
+      <div class="advanced-panel" id="advPanel" style="display:none;">
+        <label class="vs-slider-label">Driving mode</label>
+        <div class="mode-row" id="modeRow">
+          <button class="mode-btn" data-mode="Eco">🌿 Eco</button>
+          <button class="mode-btn selected" data-mode="Normal">⚡ Normal</button>
+          <button class="mode-btn" data-mode="Sport">🏁 Sport</button>
+          <button class="mode-btn" data-mode="Offroad">⛰ Off-road</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BLUETOOTH ================= -->
+<section id="connect">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="#B6FF3C" stroke-width="1.2" fill="none"/><line x1="8" y1="8" x2="11" y2="5" stroke="#B6FF3C" stroke-width="1.2"/></svg>02 · Pair your vehicle</div>
+      <h2 class="section-title">Connect over Bluetooth for live telemetry</h2>
+      <p class="section-desc">Once paired, VoltPulse reads real battery %, charge port state and drive telemetry straight from the car.</p>
+    </div>
+
+    <div class="bt-wrap reveal">
+      <div class="bt-visual">
+        <div class="bt-rings">
+          <div class="bt-ring"></div><div class="bt-ring"></div><div class="bt-ring"></div>
+          <div class="bt-core">🔵</div>
+        </div>
+        <div class="bt-status" id="btStatusText">Not connected<small>Tap below to pair your selected EV</small></div>
+        <button class="bt-connect-btn" id="btConnectBtn">Pair Vehicle</button>
+      </div>
+      <div class="bt-details">
+        <h3 id="btCarName">No vehicle selected yet</h3>
+        <p id="btCarDesc">Choose a model above, then pair it here to unlock live battery %, signal strength and charge-port status across your whole trip.</p>
+        <div class="bt-metrics">
+          <div class="bt-metric"><span>Battery</span><b id="btBattery">—</b></div>
+          <div class="bt-metric"><span>Signal</span><div class="signal-bars"><i></i><i></i><i></i><i></i></div></div>
+          <div class="bt-metric"><span>Charge Port</span><b id="btPort">—</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PLANNER ================= -->
+<section id="planner">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="#B6FF3C" stroke-width="1.2" fill="none"/><line x1="8" y1="8" x2="11" y2="5" stroke="#B6FF3C" stroke-width="1.2"/></svg>03 · Route it</div>
+      <h2 class="section-title">Tell us where you're headed</h2>
+      <p class="section-desc">Real routing via OpenRouteService — we'll factor in your manual battery level and driving mode to estimate arrival charge.</p>
+    </div>
+
+    <div class="planner reveal">
+      <div class="planner-form">
+        <div class="field">
+          <label>From</label>
+          <div class="field-input">📍 <input type="text" id="fromInput" value="Chandni Chowk, Delhi"></div>
+        </div>
+        <div class="field">
+          <label>To</label>
+          <div class="field-input">🏁 <input type="text" id="toInput" value="Sector 135, Noida"></div>
+        </div>
+        <button class="plan-btn" id="planTripBtn">⚡ Plan Trip</button>
+      </div>
+      <div class="planner-status" id="plannerStatus"></div>
+
+      <div class="leaflet-box hud-frame" id="plannerMap">
+        <span class="hc-bl"></span><span class="hc-br"></span>
+      </div>
+
+      <div class="trip-stats">
+        <div class="trip-stat"><span>Distance</span><b class="volt" id="statDist">27.4 km</b><small id="statDistNote">Fastest of 3 routes</small></div>
+        <div class="trip-stat"><span>ETA</span><b id="statEta">52 min</b><small>via OpenRouteService</small></div>
+        <div class="trip-stat"><span>Battery on arrival</span><b class="charge" id="statBatt">61%</b>
+          <div class="battery-bar"><div class="battery-fill" id="battFill"></div></div>
+        </div>
+        <div class="trip-stat"><span>CO₂ avoided</span><b class="charge" id="statCo2">4.1 kg</b><small>vs. petrol equivalent</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATIONS ================= -->
+<section id="stations">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="#B6FF3C" stroke-width="1.2" fill="none"/><line x1="8" y1="8" x2="11" y2="5" stroke="#B6FF3C" stroke-width="1.2"/></svg>04 · Nearest chargers</div>
+      <h2 class="section-title">Charging stations along your route</h2>
+      <p class="section-desc">A mix of private fast-charging networks and government-run EV stations — live slot availability, plug types and per-kWh pricing, with directions one tap away.</p>
+    </div>
+
+    <div class="station-summary" id="stationSummary"></div>
+
+    <div class="station-filter-tabs" id="filterTabs">
+      <button class="filter-tab active" data-filter="all">All Stations</button>
+      <button class="filter-tab" data-filter="fast">⚡ Fast Charging</button>
+      <button class="filter-tab" data-filter="govt">🏛 Government</button>
+    </div>
+
+    <div class="station-grid" id="stationGrid"></div>
+  </div>
+</section>
+
+<div class="road-divider"><div class="road-lane"></div><div class="road-car">🚗</div></div>
+
+<!-- ================= IMPACT ================= -->
+<section id="impact">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="#B6FF3C" stroke-width="1.2" fill="none"/><line x1="8" y1="8" x2="11" y2="5" stroke="#B6FF3C" stroke-width="1.2"/></svg>05 · Your impact</div>
+      <h2 class="section-title">Every electric km, counted</h2>
+      <p class="section-desc">A running tally of what driving electric has actually saved — for you and the air around you.</p>
+    </div>
+
+    <div class="impact-wrap reveal">
+      <div class="gauge-card">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="54" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
+          <circle cx="65" cy="65" r="54" fill="none" stroke="url(#gaugeGrad)" stroke-width="12"
+                  stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="90"
+                  transform="rotate(-90 65 65)"/>
+          <defs><linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#29D3FF"/><stop offset="100%" stop-color="#B6FF3C"/>
+          </linearGradient></defs>
+          <text x="65" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="26" fill="#F2F6F9" font-weight="700">73%</text>
+          <text x="65" y="80" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#4E5F70">BATTERY</text>
+        </svg>
+        <div>
+          <h3 style="font-family:var(--disp);font-size:1.4rem;margin-bottom:8px;text-transform:uppercase;">Current charge state</h3>
+          <p style="color:var(--text-mid);font-size:0.92rem;line-height:1.6;">Enough for <b style="color:var(--charge)">~338 km</b> before your next stop is even suggested. VoltPulse only interrupts your drive when the physics say you need it.</p>
+        </div>
+      </div>
+
+      <div class="impact-stats">
+        <div class="impact-stat"><div class="ico">🌱</div><b data-count="184">0</b><span>kg CO₂ saved this month</span></div>
+        <div class="impact-stat"><div class="ico">🌳</div><b data-count="9">0</b><span>Trees' worth of offset</span></div>
+        <div class="impact-stat"><div class="ico">₹</div><b data-count="3120">0</b><span>Saved vs. petrol cost</span></div>
+        <div class="impact-stat"><div class="ico">⏱</div><b data-count="46">0</b><span>Hours of queue time avoided</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="logo" style="font-size:1rem;">
+      <svg class="logo-ring" viewBox="0 0 40 40" fill="none" style="width:24px;height:24px;">
+        <circle cx="20" cy="20" r="17" stroke="#29D3FF" stroke-width="2" opacity="0.5"/>
+        <path d="M22 8 L13 22 H19 L17 32 L27 17 H21 Z" fill="#B6FF3C"/>
+      </svg>
+      VoltPulse
+    </div>
+    <div class="tech-chips">
+      <span class="tech-chip">React + Tailwind</span>
+      <span class="tech-chip">FastAPI</span>
+      <span class="tech-chip">Leaflet.js</span>
+      <span class="tech-chip">OpenRouteService</span>
+      <span class="tech-chip">Open Charge Map</span>
+      <span class="tech-chip">Smartcar/Enode</span>
+    </div>
+    <div class="foot-copy">Smart India Hackathon 2026 · Team C²</div>
+  </div>
+</footer>
+
+<script>
+const ORS_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjAxNDJjZjk3YjcwMjQ3MTg5ZjVhZTQ5NmRjYWE1MmVlIiwiaCI6Im11cm11cjY0In0=";
+const FALLBACK_FROM = {name:"Chandni Chowk, Delhi", lat:28.6506, lon:77.2303};
+const FALLBACK_TO   = {name:"Sector 135, Noida",   lat:28.5063, lon:77.3910};
+
+function dotIcon(color){
+  return L.divIcon({className:'', html:`<div class="mk-dot" style="background:${color};box-shadow:0 0 0 6px ${color}33,0 0 14px ${color};"></div>`, iconSize:[14,14], iconAnchor:[7,7]});
+}
+function labelIcon(text, color){
+  return L.divIcon({className:'', html:`<div class="mk-dot" style="background:${color};box-shadow:0 0 0 6px ${color}33,0 0 14px ${color};margin:0 auto 4px;"></div><div class="mk-label">${text}</div>`, iconSize:[120,40], iconAnchor:[7,7]});
+}
+
+async function orsGeocode(text){
+  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_KEY}&text=${encodeURIComponent(text)}&size=1&boundary.country=IN`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('geocode failed');
+  const data = await res.json();
+  if(!data.features || !data.features.length) throw new Error('no results');
+  const [lon,lat] = data.features[0].geometry.coordinates;
+  return {lat, lon, name:text};
+}
+
+async function orsDirections(from, to){
+  const url = `https://api.openrouteservice.org/v2/directions/driving-car/geojson`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Authorization': ORS_KEY, 'Content-Type':'application/json; charset=utf-8'},
+    body: JSON.stringify({coordinates:[[from.lon,from.lat],[to.lon,to.lat]]})
+  });
+  if(!res.ok) throw new Error('directions failed');
+  return res.json();
+}
+
+function drawRoute(map, geojson, from, to){
+  map.eachLayer(l=>{ if(l instanceof L.GeoJSON || l instanceof L.Marker) map.removeLayer(l); });
+  const routeLayer = L.geoJSON(geojson, {style:{color:'#29D3FF', weight:4, opacity:0.95, className:'ors-route-line'}}).addTo(map);
+  L.marker([from.lat, from.lon], {icon: labelIcon(from.name.split(',')[0], '#29D3FF')}).addTo(map);
+  L.marker([to.lat, to.lon], {icon: labelIcon(to.name.split(',')[0], '#B6FF3C')}).addTo(map);
+  map.fitBounds(routeLayer.getBounds(), {padding:[26,26]});
+  return routeLayer;
+}
+
+/* ---------------- DATA ---------------- */
+const cars = [
+  {name:"Tata Nexon EV", badge:"Compact SUV", range:"465 km", battery:"40.5 kWh", fastcharge:"56 min (10–80%)", top:"120 km/h", color:"#29D3FF"},
+  {name:"MG ZS EV", badge:"Mid SUV", range:"461 km", battery:"50.3 kWh", fastcharge:"60 min (10–80%)", top:"175 km/h", color:"#B6FF3C"},
+  {name:"Hyundai Kona Electric", badge:"Crossover", range:"452 km", battery:"39.2 kWh", fastcharge:"57 min (10–80%)", top:"167 km/h", color:"#FF5B4D"},
+  {name:"Mahindra XUV400", badge:"Compact SUV", range:"456 km", battery:"39.4 kWh", fastcharge:"50 min (0–80%)", top:"150 km/h", color:"#29D3FF"},
+  {name:"BYD Atto 3", badge:"Premium SUV", range:"521 km", battery:"60.5 kWh", fastcharge:"50 min (30–80%)", top:"160 km/h", color:"#B6FF3C"},
+  {name:"Tata Punch EV", badge:"Micro SUV", range:"421 km", battery:"35.0 kWh", fastcharge:"56 min (10–80%)", top:"122 km/h", color:"#C7D0D9"},
+];
+
+const stations = [
+  {name:"Statiq Hub — Connaught Place", net:"Statiq", type:"fast", power:"60 kW DC", dist:"3.2 km", eta:"9 min", price:"₹18.5/kWh", plugs:["CCS2","Type 2"], slots:3, total:6, status:"open"},
+  {name:"Tata Power EZ Charge — Cyber Hub", net:"Tata Power", type:"fast", power:"50 kW DC", dist:"5.7 km", eta:"14 min", price:"₹21/kWh", plugs:["CCS2"], slots:1, total:4, status:"busy"},
+  {name:"ChargeZone — DND Flyway Plaza", net:"ChargeZone", type:"fast", power:"120 kW DC", dist:"8.1 km", eta:"18 min", price:"₹19.9/kWh", plugs:["CCS2","CHAdeMO"], slots:5, total:8, status:"open"},
+  {name:"Ather Grid — Sector 135, Noida", net:"Ather Grid", type:"fast", power:"22 kW AC", dist:"11.4 km", eta:"24 min", price:"₹16.5/kWh", plugs:["Type 2"], slots:2, total:5, status:"open"},
+  {name:"NDMC EV Charging Hub — India Gate", net:"NDMC · Govt of Delhi", type:"govt", power:"30 kW DC", dist:"6.5 km", eta:"16 min", price:"₹12.0/kWh", plugs:["CCS2","Type 2"], slots:2, total:4, status:"open"},
+  {name:"EESL Charging Station — Connaught Place", net:"EESL · Ministry of Power", type:"govt", power:"25 kW DC", dist:"4.0 km", eta:"11 min", price:"₹10.5/kWh", plugs:["CCS2"], slots:1, total:3, status:"busy"},
+  {name:"NTPC Vidyut Vahan — Sector 62, Noida", net:"NTPC Ltd · Govt PSU", type:"govt", power:"50 kW DC", dist:"13.2 km", eta:"27 min", price:"₹11.0/kWh", plugs:["CCS2","CHAdeMO"], slots:4, total:6, status:"open"},
+  {name:"DTC Depot Charging — Kashmere Gate ISBT", net:"Delhi Transport Corp.", type:"govt", power:"20 kW AC", dist:"9.8 km", eta:"21 min", price:"₹9.5/kWh", plugs:["Type 2"], slots:3, total:5, status:"open"},
+];
+
+function carSVG(color){
+  return `<svg width="150" height="80" viewBox="0 0 150 80" fill="none">
+    <ellipse cx="75" cy="68" rx="66" ry="6" fill="black" opacity="0.35"/>
+    <path d="M14 52 C14 40 22 34 34 32 L46 20 C50 15 57 12 65 12 L92 12 C100 12 107 15 111 21 L122 32 C134 34 140 40 140 50 L140 56 C140 60 137 62 133 62 L21 62 C17 62 14 60 14 56 Z"
+      fill="${color}" opacity="0.16" stroke="${color}" stroke-width="2.5"/>
+    <path d="M50 32 L58 18 L96 18 L106 32 Z" fill="${color}" opacity="0.28" stroke="${color}" stroke-width="1.5"/>
+    <circle cx="40" cy="62" r="11" fill="#0D1116" stroke="${color}" stroke-width="3"/>
+    <circle cx="112" cy="62" r="11" fill="#0D1116" stroke="${color}" stroke-width="3"/>
+    <rect x="128" y="40" width="6" height="4" rx="1" fill="${color}"/>
+  </svg>`;
+}
+
+/* ---------------- STATE ---------------- */
+let selectedCarIdx = 0;
+let batteryLevel = 72;
+let drivingMode = 'Normal';
+const modeMultiplier = {Eco:0.85, Normal:1.0, Sport:1.25, Offroad:1.4};
+
+function estimateArrival(distanceKm){
+  const car = cars[selectedCarIdx];
+  const capacity = parseFloat(car.battery);
+  const rangeKm = parseFloat(car.range);
+  const consumptionPerKm = capacity / rangeKm;
+  const energyUsed = distanceKm * consumptionPerKm * modeMultiplier[drivingMode];
+  const dropPct = (energyUsed / capacity) * 100;
+  return Math.max(0, Math.round(batteryLevel - dropPct));
+}
+
+/* ---------------- STATUS STRIP ---------------- */
+const ssCar = document.getElementById('ssCar');
+const ssBattery = document.getElementById('ssBattery');
+const ssMode = document.getElementById('ssMode');
+const ssBt = document.getElementById('ssBt');
+function updateStatusStrip(){
+  ssCar.textContent = cars[selectedCarIdx].name;
+  ssBattery.textContent = batteryLevel + '%';
+  ssMode.textContent = drivingMode;
+  ssBt.textContent = connectedFlag() ? '● Paired' : '● Not Paired';
+  ssBt.classList.toggle('on', connectedFlag());
+}
+function connectedFlag(){ return typeof connected !== 'undefined' && connected; }
+
+/* ---------------- RENDER FLEET ---------------- */
+const carGrid = document.getElementById('carGrid');
+function renderCars(){
+  carGrid.innerHTML = cars.map((c,i)=>`
+    <div class="car-card ${i===selectedCarIdx?'selected':''}" data-idx="${i}">
+      <div class="car-svg-holder">${carSVG(c.color)}</div>
+      <div class="car-name">${c.name}</div>
+      <div class="car-badge">${c.badge}</div>
+      <div class="car-specs">
+        <div class="spec"><span>Range</span><b>${c.range}</b></div>
+        <div class="spec"><span>Battery</span><b>${c.battery}</b></div>
+        <div class="spec"><span>Fast Charge</span><b>${c.fastcharge}</b></div>
+        <div class="spec"><span>Top Speed</span><b>${c.top}</b></div>
+      </div>
+      <button class="car-select-btn">${i===selectedCarIdx?'✓ Selected as my EV':'Select this EV'}</button>
+    </div>
+  `).join('');
+  document.querySelectorAll('.car-card').forEach(el=>{
+    el.addEventListener('click',()=>{
+      selectedCarIdx = parseInt(el.dataset.idx);
+      renderCars();
+      updateBtCarInfo();
+      updateVehicleSetupName();
+      updateStatusStrip();
+    });
+  });
+}
+renderCars();
+
+/* ---------------- VEHICLE MANUAL ENTRY ---------------- */
+const vsCarName = document.getElementById('vsCarName');
+const vsBatteryBig = document.getElementById('vsBatteryBig');
+const batterySlider = document.getElementById('batterySlider');
+const batteryTrackFill = document.getElementById('batteryTrackFill');
+const advToggle = document.getElementById('advToggle');
+const advPanel = document.getElementById('advPanel');
+const modeRow = document.getElementById('modeRow');
+
+function updateVehicleSetupName(){
+  vsCarName.textContent = cars[selectedCarIdx].name;
+}
+updateVehicleSetupName();
+
+batterySlider.addEventListener('input', e=>{
+  batteryLevel = parseInt(e.target.value);
+  vsBatteryBig.textContent = batteryLevel + '%';
+  batteryTrackFill.style.width = batteryLevel + '%';
+  updateStatusStrip();
+});
+
+advToggle.addEventListener('click', ()=>{
+  const open = advPanel.style.display !== 'none';
+  advPanel.style.display = open ? 'none' : 'block';
+  advToggle.classList.toggle('open', !open);
+});
+
+modeRow.addEventListener('click', e=>{
+  const btn = e.target.closest('.mode-btn');
+  if(!btn) return;
+  drivingMode = btn.dataset.mode;
+  modeRow.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  updateStatusStrip();
+});
+
+/* ---------------- BLUETOOTH ---------------- */
+const btStatusText = document.getElementById('btStatusText');
+const btConnectBtn = document.getElementById('btConnectBtn');
+const btCarName = document.getElementById('btCarName');
+const btCarDesc = document.getElementById('btCarDesc');
+const btBattery = document.getElementById('btBattery');
+const btPort = document.getElementById('btPort');
+let connected = false;
+
+function updateBtCarInfo(){
+  const c = cars[selectedCarIdx];
+  btCarName.textContent = connected ? `Connected to ${c.name}` : `${c.name} — ready to pair`;
+  btCarDesc.textContent = connected
+    ? `Live telemetry streaming from your ${c.name}. Battery, port state and location update in real time as you drive.`
+    : `Tap "Pair Vehicle" to connect your ${c.name} over Bluetooth and unlock live battery and charge-port data.`;
+}
+updateBtCarInfo();
+
+btConnectBtn.addEventListener('click', ()=>{
+  if(connected) return;
+  btStatusText.innerHTML = 'Pairing…<small>Searching for nearby vehicle</small>';
+  btConnectBtn.textContent = 'Pairing…';
+  btConnectBtn.style.opacity = '0.6';
+  setTimeout(()=>{
+    connected = true;
+    btStatusText.innerHTML = `Connected<small>${cars[selectedCarIdx].name}</small>`;
+    btBattery.textContent = batteryLevel + '%';
+    btPort.textContent = 'CCS2 · Locked';
+    btConnectBtn.textContent = '✓ Paired';
+    btConnectBtn.style.opacity = '1';
+    updateBtCarInfo();
+    updateStatusStrip();
+  }, 1400);
+});
+
+/* ---------------- HERO MAP (auto demo route) ---------------- */
+let heroMap, plannerMap;
+function initMaps(){
+  heroMap = L.map('heroMap', {zoomControl:true, attributionControl:true}).setView([28.58, 77.30], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap'}).addTo(heroMap);
+
+  plannerMap = L.map('plannerMap', {zoomControl:true, attributionControl:true}).setView([28.58, 77.30], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap'}).addTo(plannerMap);
+
+  runHeroDemo();
+}
+
+async function runHeroDemo(){
+  const status = document.getElementById('heroMapStatus');
+  try{
+    const geo = await orsDirections(FALLBACK_FROM, FALLBACK_TO);
+    drawRoute(heroMap, geo, FALLBACK_FROM, FALLBACK_TO);
+    const summary = geo.features[0].properties.summary;
+    const km = summary.distance/1000;
+    const mins = Math.round(summary.duration/60);
+    document.getElementById('heroDist').textContent = km.toFixed(1)+' km';
+    document.getElementById('heroEta').textContent = mins+' min';
+    document.getElementById('heroArrive').textContent = estimateArrival(km)+'%';
+    status.style.display='none';
+  }catch(err){
+    status.textContent = 'Live routing unavailable — showing last known route';
+    L.marker([FALLBACK_FROM.lat, FALLBACK_FROM.lon], {icon:labelIcon('Chandni Chowk','#29D3FF')}).addTo(heroMap);
+    L.marker([FALLBACK_TO.lat, FALLBACK_TO.lon], {icon:labelIcon('Sector 135','#B6FF3C')}).addTo(heroMap);
+    L.polyline([[FALLBACK_FROM.lat,FALLBACK_FROM.lon],[FALLBACK_TO.lat,FALLBACK_TO.lon]], {color:'#29D3FF', weight:3, dashArray:'8,10', className:'ors-route-line'}).addTo(heroMap);
+    document.getElementById('heroDist').textContent = '27.4 km';
+    document.getElementById('heroEta').textContent = '52 min';
+    document.getElementById('heroArrive').textContent = estimateArrival(27.4)+'%';
+  }
+}
+window.addEventListener('load', initMaps);
+
+/* ---------------- TRIP PLANNER (real ORS routing) ---------------- */
+const plannerStatus = document.getElementById('plannerStatus');
+const planTripBtn = document.getElementById('planTripBtn');
+
+planTripBtn.addEventListener('click', async ()=>{
+  const fromText = document.getElementById('fromInput').value.trim();
+  const toText = document.getElementById('toInput').value.trim();
+  if(!fromText || !toText){ plannerStatus.textContent = 'Enter both a start and destination.'; plannerStatus.className='planner-status err'; return; }
+
+  planTripBtn.disabled = true;
+  planTripBtn.textContent = 'Planning…';
+  plannerStatus.className = 'planner-status';
+  plannerStatus.textContent = 'Locating both points…';
+
+  let from, to;
+  try{
+    [from, to] = await Promise.all([orsGeocode(fromText), orsGeocode(toText)]);
+  }catch(err){
+    from = FALLBACK_FROM; to = FALLBACK_TO;
+    plannerStatus.textContent = 'Could not geocode exactly — using nearest known landmarks.';
+    plannerStatus.className = 'planner-status err';
+  }
+
+  try{
+    plannerStatus.textContent = 'Fetching route from OpenRouteService…';
+    const geo = await orsDirections(from, to);
+    drawRoute(plannerMap, geo, from, to);
+    const summary = geo.features[0].properties.summary;
+    const km = summary.distance/1000;
+    const mins = Math.round(summary.duration/60);
+    const arrival = estimateArrival(km);
+    const co2 = (km*0.12).toFixed(1);
+
+    document.getElementById('statDist').textContent = km.toFixed(1)+' km';
+    document.getElementById('statDistNote').textContent = 'Live route via ORS';
+    document.getElementById('statEta').textContent = mins+' min';
+    document.getElementById('statBatt').textContent = arrival+'%';
+    document.getElementById('battFill').style.width = arrival+'%';
+    document.getElementById('statCo2').textContent = co2+' kg';
+
+    plannerStatus.textContent = `Routed ${km.toFixed(1)} km in ${mins} min · ${drivingMode} mode from ${batteryLevel}% battery.`;
+    plannerStatus.className = 'planner-status ok';
+  }catch(err){
+    plannerStatus.textContent = 'Routing service unreachable right now — please try again.';
+    plannerStatus.className = 'planner-status err';
+  }finally{
+    planTripBtn.disabled = false;
+    planTripBtn.textContent = '⚡ Plan Trip';
+  }
+});
+
+/* ---------------- RENDER STATIONS (with fast/govt filter) ---------------- */
+const stationGrid = document.getElementById('stationGrid');
+const stationSummary = document.getElementById('stationSummary');
+const filterTabs = document.getElementById('filterTabs');
+let stationFilter = 'all';
+
+function renderStationSummary(){
+  const fastCount = stations.filter(s=>s.type==='fast').length;
+  const govtCount = stations.filter(s=>s.type==='govt').length;
+  stationSummary.innerHTML = `
+    <div class="summary-chip fast">⚡ <span>Fast Charging networks nearby</span><b>${fastCount}</b></div>
+    <div class="summary-chip govt">🏛 <span>Government-run stations nearby</span><b>${govtCount}</b></div>
+  `;
+}
+
+function renderStations(){
+  const list = stationFilter==='all' ? stations : stations.filter(s=>s.type===stationFilter);
+  stationGrid.innerHTML = list.map(s=>{
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.name)}`;
+    return `
+    <div class="station-card">
+      <div class="station-top">
+        <div>
+          <span class="type-badge ${s.type}">${s.type==='govt' ? '🏛 Government' : '⚡ Fast Charging'}</span>
+          <div class="station-name">${s.name}</div>
+          <div class="station-net">${s.net} · ${s.power}</div>
+        </div>
+        <div class="avail-badge ${s.status}">${s.status==='open' ? '● Slots open' : '● Nearly full'}</div>
+      </div>
+      <div class="plug-tags">${s.plugs.map(p=>`<span class="plug-tag">${p}</span>`).join('')}</div>
+      <div class="station-meta">
+        <div class="smeta"><span>Distance</span><b>${s.dist}</b></div>
+        <div class="smeta"><span>ETA</span><b>${s.eta}</b></div>
+        <div class="smeta"><span>Price</span><b>${s.price}</b></div>
+      </div>
+      <div class="slots-row">
+        <div class="slots-track"><div class="slots-fill" style="width:${(s.slots/s.total)*100}%;"></div></div>
+        <div class="slots-label">${s.slots}/${s.total} free</div>
+      </div>
+      <div class="station-actions">
+        <a class="dir-btn" href="${mapsUrl}" target="_blank" rel="noopener">🧭 Directions · ${s.eta}</a>
+        <button class="reserve-btn">Reserve slot</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+filterTabs.addEventListener('click', e=>{
+  const btn = e.target.closest('.filter-tab');
+  if(!btn) return;
+  stationFilter = btn.dataset.filter;
+  filterTabs.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStations();
+});
+
+renderStationSummary();
+renderStations();
+
+/* ---------------- COUNT UP ---------------- */
+const counters = document.querySelectorAll('[data-count]');
+const counted = new WeakSet();
+function runCount(el){
+  const target = parseInt(el.dataset.count);
+  let cur = 0;
+  const step = Math.max(1, Math.round(target/40));
+  const t = setInterval(()=>{
+    cur += step;
+    if(cur >= target){cur = target; clearInterval(t);}
+    el.textContent = cur.toLocaleString();
+  }, 25);
+}
+
+/* ---------------- SCROLL REVEAL ---------------- */
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      en.target.classList.add('in');
+      if(en.target.id==='impact' || en.target.contains(document.querySelector('[data-count]'))){
+        counters.forEach(c=>{ if(!counted.has(c)){counted.add(c); runCount(c);} });
+      }
+      io.unobserve(en.target);
+    }
+  });
+},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+updateStatusStrip();
+</script>
+</body>
+</html>
