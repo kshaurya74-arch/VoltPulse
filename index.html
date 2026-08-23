@@ -380,6 +380,91 @@ input.battery-slider::-moz-range-thumb{
   padding:11px 18px;background:rgba(182,255,60,0.1);border:1px solid rgba(182,255,60,0.35);
   border-radius:12px;color:var(--charge);font-weight:600;font-size:0.85rem;font-family:var(--disp);letter-spacing:0.02em;text-transform:uppercase;
 }
+.card-live-line{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:0.72rem;color:var(--text-mid);
+  background:rgba(255,255,255,0.03);border:1px solid var(--hairline);border-radius:10px;padding:8px 12px;
+}
+.card-live-line .lv-plug{color:var(--volt);}
+.card-live-line .lv-wait{color:var(--charge);}
+.card-live-line .lv-dot{width:5px;height:5px;border-radius:50%;background:var(--charge);box-shadow:0 0 6px var(--charge);animation:blink 1.6s infinite;}
+
+/* ---------------- RESERVATION MODAL ---------------- */
+.modal-overlay{
+  position:fixed;inset:0;z-index:1000;background:rgba(5,7,10,0.78);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;padding:24px;
+}
+.modal-overlay.open{display:flex;}
+.reserve-modal{
+  width:100%;max-width:760px;max-height:88vh;overflow-y:auto;
+  background:linear-gradient(160deg,var(--carbon-1),var(--carbon-3));
+  border:1px solid var(--hairline);border-radius:26px;padding:32px;
+  box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 0 1px rgba(41,211,255,0.08);
+  animation:modalIn .25s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(0.98);}to{opacity:1;transform:none;}}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:14px;}
+.modal-head h3{font-family:var(--disp);font-size:1.5rem;text-transform:uppercase;margin-bottom:4px;}
+.modal-head .m-sub{font-family:var(--mono);font-size:0.76rem;color:var(--text-low);}
+.modal-close{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid var(--hairline);color:var(--text-hi);font-size:1.1rem;flex-shrink:0;}
+.modal-close:hover{background:var(--alert);color:#fff;border-color:var(--alert);}
+
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0;}
+.mstat{background:var(--carbon-2);border:1px solid var(--hairline);border-radius:14px;padding:14px;text-align:center;}
+.mstat span{display:block;font-size:0.64rem;color:var(--text-low);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;}
+.mstat b{font-family:var(--mono);font-size:1.35rem;color:var(--text-hi);}
+.mstat b.volt{color:var(--volt);} .mstat b.charge{color:var(--charge);} .mstat b.alert{color:var(--alert);}
+
+.bay-section-label{font-family:var(--mono);font-size:0.72rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+.bay-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+@media (max-width:560px){.bay-grid{grid-template-columns:repeat(2,1fr);}}
+.bay{
+  border-radius:14px;padding:12px 10px;text-align:center;border:1px solid var(--hairline);
+  background:var(--carbon-2);position:relative;overflow:hidden;transition:.15s ease;
+}
+.bay .bay-id{font-family:var(--mono);font-size:0.62rem;color:var(--text-low);margin-bottom:6px;}
+.bay .bay-ico{font-size:1.3rem;margin-bottom:4px;}
+.bay .bay-state{font-family:var(--mono);font-size:0.66rem;color:var(--text-mid);}
+.bay.available{border-color:rgba(182,255,60,0.4);cursor:pointer;}
+.bay.available:hover{background:rgba(182,255,60,0.08);transform:translateY(-2px);}
+.bay.available .bay-state{color:var(--charge);}
+.bay.charging{border-color:rgba(41,211,255,0.25);}
+.bay.charging .bay-state{color:var(--volt);}
+.bay.you{border-color:var(--volt);box-shadow:0 0 0 1px var(--volt),0 0 22px rgba(41,211,255,0.35);}
+.bay.you::before{content:"YOU";position:absolute;top:6px;right:6px;font-family:var(--mono);font-size:0.55rem;background:var(--volt);color:#031218;padding:2px 5px;border-radius:5px;font-weight:700;}
+.bay-progress{width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:6px;}
+.bay-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--volt),var(--charge));}
+
+.reserve-action-panel{border-top:1px solid var(--hairline);padding-top:20px;}
+.ra-btn{
+  width:100%;padding:15px;border-radius:14px;font-weight:700;font-size:0.95rem;font-family:var(--disp);
+  letter-spacing:0.02em;text-transform:uppercase;transition:.15s ease;
+}
+.ra-btn.primary{background:linear-gradient(135deg,var(--volt),#7BEAFF);color:#02141C;box-shadow:0 10px 26px rgba(41,211,255,0.28);}
+.ra-btn.primary:hover{transform:translateY(-2px);}
+.ra-btn.success{background:linear-gradient(135deg,var(--charge),#E4FFAE);color:#0A1400;box-shadow:0 10px 26px rgba(182,255,60,0.28);}
+.ra-btn.danger{background:rgba(255,91,77,0.1);color:var(--alert);border:1px solid rgba(255,91,77,0.4);}
+.ra-row{display:flex;gap:10px;margin-top:10px;}
+.ra-row .ra-btn{flex:1;}
+.hold-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;background:rgba(41,211,255,0.08);
+  border:1px solid rgba(41,211,255,0.3);border-radius:14px;padding:16px 18px;margin-bottom:16px;
+}
+.hold-banner .hb-text b{display:block;color:var(--volt);font-family:var(--disp);font-size:1.05rem;text-transform:uppercase;}
+.hold-banner .hb-text span{font-size:0.78rem;color:var(--text-mid);}
+.hold-timer{font-family:var(--mono);font-size:1.6rem;color:var(--volt);}
+.charge-banner{
+  background:rgba(182,255,60,0.08);border:1px solid rgba(182,255,60,0.3);border-radius:14px;padding:18px;margin-bottom:16px;
+}
+.charge-banner .cb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.charge-banner .cb-top b{font-family:var(--disp);font-size:1.1rem;color:var(--charge);text-transform:uppercase;}
+.charge-banner .cb-top span{font-family:var(--mono);font-size:1.3rem;color:var(--charge);}
+.complete-banner{text-align:center;padding:10px 0 4px;}
+.complete-banner .cb-icon{font-size:2.6rem;margin-bottom:10px;}
+.complete-banner h4{font-family:var(--disp);font-size:1.4rem;text-transform:uppercase;color:var(--charge);margin-bottom:6px;}
+.complete-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0;}
+.queue-banner{background:rgba(255,91,77,0.06);border:1px solid rgba(255,91,77,0.28);border-radius:14px;padding:16px 18px;margin-bottom:16px;}
+.queue-banner b{display:block;font-family:var(--disp);font-size:1.05rem;text-transform:uppercase;color:var(--alert);margin-bottom:4px;}
+.queue-banner span{font-size:0.82rem;color:var(--text-mid);}
 
 .impact-wrap{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:24px;}
 @media (max-width:900px){.impact-wrap{grid-template-columns:1fr;}}
@@ -676,6 +761,10 @@ footer{border-top:1px solid var(--hairline);padding:48px 32px;position:relative;
   </div>
 </footer>
 
+<div class="modal-overlay" id="reserveOverlay">
+  <div class="reserve-modal" id="reserveModal"></div>
+</div>
+
 <script>
 const ORS_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjAxNDJjZjk3YjcwMjQ3MTg5ZjVhZTQ5NmRjYWE1MmVlIiwiaCI6Im11cm11cjY0In0=";
 const FALLBACK_FROM = {name:"Chandni Chowk, Delhi", lat:28.6506, lon:77.2303};
@@ -738,6 +827,7 @@ const stations = [
   {name:"NTPC Vidyut Vahan — Sector 62, Noida", net:"NTPC Ltd · Govt PSU", type:"govt", power:"50 kW DC", dist:"13.2 km", eta:"27 min", price:"₹11.0/kWh", plugs:["CCS2","CHAdeMO"], slots:4, total:6, status:"open"},
   {name:"DTC Depot Charging — Kashmere Gate ISBT", net:"Delhi Transport Corp.", type:"govt", power:"20 kW AC", dist:"9.8 km", eta:"21 min", price:"₹9.5/kWh", plugs:["Type 2"], slots:3, total:5, status:"open"},
 ];
+stations.forEach((s,i)=>{ s.idx = i; });
 
 function carSVG(color){
   return `<svg width="150" height="80" viewBox="0 0 150 80" fill="none">
@@ -968,6 +1058,255 @@ planTripBtn.addEventListener('click', async ()=>{
   }
 });
 
+/* ---------------- LIVE BAY / QUEUE SIMULATION ---------------- */
+const liveStations = {}; // idx -> { bays:[{id,status,remaining,owner}], queue:[{isUser}] }
+let userReservation = null; // {stationIdx, bayId, status:'queued'|'assigned'|'charging'|'complete', queuePos, holdSec, chargeRemainSec, chargeTotalMin}
+let secondsCounter = 0;
+
+function initLiveState(s){
+  if(liveStations[s.idx]) return liveStations[s.idx];
+  const occupied = s.total - s.slots;
+  const bays = [];
+  for(let i=0;i<s.total;i++){
+    if(i < occupied){
+      bays.push({id:i+1, status:'charging', remaining: 4 + Math.floor(Math.random()*36), owner:null});
+    } else {
+      bays.push({id:i+1, status:'available', remaining:0, owner:null});
+    }
+  }
+  const queue = s.status==='busy' ? Array.from({length: 1 + Math.floor(Math.random()*2)}, ()=>({isUser:false})) : [];
+  const state = {bays, queue};
+  liveStations[s.idx] = state;
+  return state;
+}
+stations.forEach(s=>initLiveState(s));
+
+function soonestFreeMinutes(state){
+  const charging = state.bays.filter(b=>b.status==='charging' && b.owner!=='you');
+  if(!charging.length) return 0;
+  return Math.min(...charging.map(b=>b.remaining));
+}
+function estimateWaitMinutes(state){
+  const aheadCount = state.queue.filter(q=>!q.isUser).length + (state.queue.findIndex(q=>q.isUser)>=0 ? state.queue.findIndex(q=>q.isUser) : 0);
+  const soonest = soonestFreeMinutes(state);
+  const hasFree = state.bays.some(b=>b.status==='available');
+  if(hasFree) return 0;
+  return soonest + aheadCount*15;
+}
+function assignQueue(state, stationIdx){
+  const freeBay = state.bays.find(b=>b.status==='available');
+  if(!freeBay || !state.queue.length) return;
+  const next = state.queue.shift();
+  if(next.isUser){
+    freeBay.status='reserved-you'; freeBay.owner='you';
+    userReservation = {stationIdx: stationIdx, bayId: freeBay.id, status:'assigned', holdSec:600};
+  } else {
+    freeBay.status='charging'; freeBay.owner='stranger'; freeBay.remaining = 8 + Math.floor(Math.random()*30);
+  }
+}
+
+/* world tick: runs every 4s, ages non-user bays, random walk-ins, queue processing */
+function worldTick(){
+  stations.forEach(s=>{
+    const state = liveStations[s.idx];
+    state.bays.forEach(b=>{
+      if(b.status==='charging' && b.owner!=='you'){
+        b.remaining -= 1;
+        if(b.remaining <= 0){ b.status='available'; b.owner=null; b.remaining=0; }
+      } else if(b.status==='available' && Math.random() < 0.12){
+        b.status='charging'; b.owner='stranger'; b.remaining = 6 + Math.floor(Math.random()*30);
+      }
+    });
+    assignQueue(state, s.idx);
+  });
+  renderStations();
+  if(reserveOverlay.classList.contains('open')) renderModal();
+}
+
+/* fast tick: every 1s, drives the user's own hold/charge countdown */
+function fastTick(){
+  if(userReservation){
+    if(userReservation.status==='assigned'){
+      userReservation.holdSec -= 1;
+      if(userReservation.holdSec <= 0){
+        const state = liveStations[userReservation.stationIdx];
+        const bay = state.bays.find(b=>b.id===userReservation.bayId);
+        if(bay){ bay.status='available'; bay.owner=null; assignQueue(state, userReservation.stationIdx); }
+        userReservation = null;
+      }
+    } else if(userReservation.status==='charging'){
+      userReservation.chargeRemainSec -= 1;
+      if(userReservation.chargeRemainSec <= 0){
+        userReservation.status='complete';
+        const state = liveStations[userReservation.stationIdx];
+        const bay = state.bays.find(b=>b.id===userReservation.bayId);
+        if(bay){ bay.status='available'; bay.owner=null; }
+      }
+    }
+  }
+  if(reserveOverlay.classList.contains('open')) renderModal();
+  renderStationSummary();
+}
+setInterval(worldTick, 4000);
+setInterval(fastTick, 1000);
+
+/* ---------------- RESERVATION MODAL ---------------- */
+const reserveOverlay = document.getElementById('reserveOverlay');
+const reserveModal = document.getElementById('reserveModal');
+let currentModalStationIdx = null;
+
+function fmtClock(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function openReserveModal(idx){
+  currentModalStationIdx = idx;
+  if(userReservation) userReservation.stationIdx = userReservation.stationIdx ?? idx;
+  reserveOverlay.classList.add('open');
+  renderModal();
+}
+function closeReserveModal(){
+  reserveOverlay.classList.remove('open');
+}
+reserveOverlay.addEventListener('click', e=>{ if(e.target===reserveOverlay) closeReserveModal(); });
+
+function userReserve(){
+  const s = stations[currentModalStationIdx];
+  const state = liveStations[s.idx];
+  if(userReservation){ return; }
+  const freeBay = state.bays.find(b=>b.status==='available');
+  if(freeBay){
+    freeBay.status='reserved-you'; freeBay.owner='you';
+    userReservation = {stationIdx:s.idx, bayId:freeBay.id, status:'assigned', holdSec:600};
+  } else {
+    state.queue.push({isUser:true});
+    userReservation = {stationIdx:s.idx, bayId:null, status:'queued', holdSec:0};
+  }
+  renderModal(); renderStations();
+}
+function userPluggedIn(){
+  if(!userReservation) return;
+  const state = liveStations[userReservation.stationIdx];
+  const bay = state.bays.find(b=>b.id===userReservation.bayId);
+  const totalMin = 25 + Math.floor(Math.random()*21);
+  userReservation.status='charging';
+  userReservation.chargeTotalMin = totalMin;
+  userReservation.chargeRemainSec = totalMin*60;
+  if(bay){ bay.status='charging'; bay.owner='you'; bay.remaining=totalMin; }
+  renderModal(); renderStations();
+}
+function userCancel(){
+  if(!userReservation) return;
+  const state = liveStations[userReservation.stationIdx];
+  if(userReservation.status==='queued'){
+    state.queue = state.queue.filter(q=>!q.isUser);
+  } else if(userReservation.bayId){
+    const bay = state.bays.find(b=>b.id===userReservation.bayId);
+    if(bay){ bay.status='available'; bay.owner=null; }
+    assignQueue(state, userReservation.stationIdx);
+  }
+  userReservation = null;
+  renderModal(); renderStations();
+}
+function userUnplug(){
+  userReservation = null;
+  renderModal(); renderStations();
+}
+
+function renderModal(){
+  if(currentModalStationIdx===null) return;
+  const s = stations[currentModalStationIdx];
+  const state = liveStations[s.idx];
+  const pluggedIn = state.bays.filter(b=>b.status==='charging').length;
+  const aheadOfYou = userReservation && userReservation.status==='queued'
+    ? state.queue.findIndex(q=>q.isUser)
+    : state.queue.length;
+  const waitMin = estimateWaitMinutes(state);
+  const isMine = userReservation && userReservation.stationIdx===s.idx;
+
+  const bayGrid = state.bays.map(b=>{
+    const mine = b.owner==='you';
+    const cls = mine ? 'you' : (b.status==='available' ? 'available' : 'charging');
+    const icon = b.status==='available' ? '🅿️' : (mine ? '🚗' : '🚙');
+    const label = b.status==='available' ? 'Available' : (mine ? (userReservation.status==='assigned'?'Reserved · you':'Charging · you') : `${b.remaining} min left`);
+    const clickable = b.status==='available' && !userReservation;
+    const progress = b.status==='charging' ? Math.max(4, 100 - (b.remaining/45*100)) : 0;
+    return `<div class="bay ${cls}" ${clickable?`onclick="userReserve()" style="cursor:pointer;"`:''}>
+      <div class="bay-id">BAY ${b.id}</div>
+      <div class="bay-ico">${icon}</div>
+      <div class="bay-state">${label}</div>
+      ${b.status==='charging'?`<div class="bay-progress"><i style="width:${progress}%;"></i></div>`:''}
+    </div>`;
+  }).join('');
+
+  let actionHtml = '';
+  if(!userReservation){
+    actionHtml = `<button class="ra-btn primary" onclick="userReserve()">⚡ Reserve a Slot Here</button>`;
+  } else if(!isMine){
+    actionHtml = `<div class="queue-banner"><b>Reservation active elsewhere</b><span>You already have a reservation running at another station. Cancel it there before booking a new one.</span></div>`;
+  } else if(userReservation.status==='queued'){
+    actionHtml = `
+      <div class="queue-banner">
+        <b>🕒 You're in the queue — position #${aheadOfYou+1}</b>
+        <span>${aheadOfYou} vehicle${aheadOfYou===1?'':'s'} ahead of you · estimated wait <b>${waitMin} min</b>. We'll auto-assign the next free bay to you.</span>
+      </div>
+      <button class="ra-btn danger" onclick="userCancel()">Cancel queue position</button>`;
+  } else if(userReservation.status==='assigned'){
+    actionHtml = `
+      <div class="hold-banner">
+        <div class="hb-text"><b>Bay ${userReservation.bayId} is yours</b><span>Plug in before the hold expires</span></div>
+        <div class="hold-timer">${fmtClock(userReservation.holdSec)}</div>
+      </div>
+      <div class="ra-row">
+        <button class="ra-btn success" onclick="userPluggedIn()">🔌 I've Plugged In</button>
+        <button class="ra-btn danger" onclick="userCancel()">Cancel</button>
+      </div>`;
+  } else if(userReservation.status==='charging'){
+    const pct = Math.round(100 - (userReservation.chargeRemainSec/(userReservation.chargeTotalMin*60))*100);
+    actionHtml = `
+      <div class="charge-banner">
+        <div class="cb-top"><b>⚡ Charging on Bay ${userReservation.bayId}</b><span>${fmtClock(userReservation.chargeRemainSec)}</span></div>
+        <div class="bay-progress" style="height:8px;"><i style="width:${pct}%;"></i></div>
+      </div>
+      <button class="ra-btn danger" onclick="userUnplug()">Unplug now</button>`;
+  } else if(userReservation.status==='complete'){
+    actionHtml = `
+      <div class="complete-banner">
+        <div class="cb-icon">🎉</div>
+        <h4>Charging Complete</h4>
+        <div class="complete-stats">
+          <div class="mstat"><span>Energy added</span><b class="charge">${(userReservation.chargeTotalMin*0.45).toFixed(1)} kWh</b></div>
+          <div class="mstat"><span>Cost</span><b>₹${Math.round(userReservation.chargeTotalMin*0.45*parseFloat(s.price))}</b></div>
+          <div class="mstat"><span>CO₂ avoided</span><b class="volt">${(userReservation.chargeTotalMin*0.09).toFixed(1)} kg</b></div>
+        </div>
+      </div>
+      <button class="ra-btn primary" onclick="userUnplug()">Done</button>`;
+  }
+
+  reserveModal.innerHTML = `
+    <div class="modal-head">
+      <div>
+        <span class="type-badge ${s.type}">${s.type==='govt' ? '🏛 Government' : '⚡ Fast Charging'}</span>
+        <h3>${s.name}</h3>
+        <div class="m-sub">${s.net} · ${s.power} · ${s.dist} away</div>
+      </div>
+      <button class="modal-close" onclick="closeReserveModal()">✕</button>
+    </div>
+
+    <div class="modal-stats">
+      <div class="mstat"><span>Plugged in now</span><b class="volt">${pluggedIn}/${s.total}</b></div>
+      <div class="mstat"><span>Ahead of you</span><b class="alert">${isMine && userReservation.status==='queued' ? aheadOfYou : state.queue.length}</b></div>
+      <div class="mstat"><span>Est. wait for a bay</span><b class="charge">${waitMin===0?'Ready now':waitMin+' min'}</b></div>
+    </div>
+
+    <div class="bay-section-label">Live bay status</div>
+    <div class="bay-grid">${bayGrid}</div>
+
+    <div class="reserve-action-panel">${actionHtml}</div>
+  `;
+}
+
 /* ---------------- RENDER STATIONS (with fast/govt filter) ---------------- */
 const stationGrid = document.getElementById('stationGrid');
 const stationSummary = document.getElementById('stationSummary');
@@ -987,6 +1326,10 @@ function renderStations(){
   const list = stationFilter==='all' ? stations : stations.filter(s=>s.type===stationFilter);
   stationGrid.innerHTML = list.map(s=>{
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.name)}`;
+    const state = liveStations[s.idx];
+    const pluggedIn = state.bays.filter(b=>b.status==='charging').length;
+    const waitMin = estimateWaitMinutes(state);
+    const waitText = waitMin===0 ? 'Bay open now' : `Next bay in ~${waitMin} min`;
     return `
     <div class="station-card">
       <div class="station-top">
@@ -998,18 +1341,19 @@ function renderStations(){
         <div class="avail-badge ${s.status}">${s.status==='open' ? '● Slots open' : '● Nearly full'}</div>
       </div>
       <div class="plug-tags">${s.plugs.map(p=>`<span class="plug-tag">${p}</span>`).join('')}</div>
+      <div class="card-live-line"><span class="lv-dot"></span><span class="lv-plug">🔌 ${pluggedIn}/${s.total} plugged in</span> · <span class="lv-wait">🕒 ${waitText}</span></div>
       <div class="station-meta">
         <div class="smeta"><span>Distance</span><b>${s.dist}</b></div>
         <div class="smeta"><span>ETA</span><b>${s.eta}</b></div>
         <div class="smeta"><span>Price</span><b>${s.price}</b></div>
       </div>
       <div class="slots-row">
-        <div class="slots-track"><div class="slots-fill" style="width:${(s.slots/s.total)*100}%;"></div></div>
-        <div class="slots-label">${s.slots}/${s.total} free</div>
+        <div class="slots-track"><div class="slots-fill" style="width:${(state.bays.filter(b=>b.status==='available').length/s.total)*100}%;"></div></div>
+        <div class="slots-label">${state.bays.filter(b=>b.status==='available').length}/${s.total} free</div>
       </div>
       <div class="station-actions">
         <a class="dir-btn" href="${mapsUrl}" target="_blank" rel="noopener">🧭 Directions · ${s.eta}</a>
-        <button class="reserve-btn">Reserve slot</button>
+        <button class="reserve-btn" onclick="openReserveModal(${s.idx})">Reserve slot</button>
       </div>
     </div>`;
   }).join('');
